@@ -1,8 +1,8 @@
 import os
 import sys
 import random
-from PyQt5.QtWidgets import QApplication, QWidget
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtWidgets import QApplication, QWidget, QGraphicsOpacityEffect
+from PyQt5.QtCore import Qt, QTimer, QPropertyAnimation
 from ondy_widget import OndyWidget
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -57,7 +57,7 @@ class TransparentOverlay(QWidget):
                     break
 
             if not overlap:
-                image_path = self.icon_paths[self.icon_index]
+                image_path = self.icon_paths[self.icon_index % len(self.icon_paths)]
                 self.icon_index += 1
                 ondy = OndyWidget(self, image_path, x, y)
                 self.ondys.append(ondy)
@@ -68,13 +68,24 @@ class TransparentOverlay(QWidget):
 
     def clear_ondys(self):
         for ondy in self.ondys:
-            ondy.deleteLater()
+            ondy.fade_out_and_delete()  # 부드럽게 사라지도록 처리
         self.ondys.clear()
         self.ondy_count = 0
 
     def update_ondys(self):
         for ondy in self.ondys:
             ondy.move_step(self.width(), self.height())
+
+    def fade_out_and_hide(self):
+        effect = QGraphicsOpacityEffect(self)
+        self.setGraphicsEffect(effect)
+        animation = QPropertyAnimation(effect, b"opacity")
+        animation.setDuration(1000)
+        animation.setStartValue(1.0)
+        animation.setEndValue(0.0)
+        animation.finished.connect(self.hide)
+        animation.start()
+        self._fade_animation = animation  # prevent garbage collection
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Q:

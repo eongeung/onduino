@@ -3,7 +3,8 @@ import random
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtGui import QPixmap, QCursor
 from PyQt5.QtCore import Qt
-
+from PyQt5.QtWidgets import QGraphicsOpacityEffect
+from PyQt5.QtCore import QPropertyAnimation
 class OndyWidget(QLabel):
     def __init__(self, parent, image_path, x, y):
         super().__init__(parent)
@@ -64,3 +65,13 @@ class OndyWidget(QLabel):
 
     def mouseDoubleClickEvent(self, event):
         self.deleteLater()
+    def fade_out_and_delete(self):
+        effect = QGraphicsOpacityEffect(self)
+        self.setGraphicsEffect(effect)
+        anim = QPropertyAnimation(effect, b"opacity")
+        anim.setDuration(800)
+        anim.setStartValue(1.0)
+        anim.setEndValue(0.0)
+        anim.finished.connect(self.deleteLater)
+        anim.start()
+        self._fade_anim = anim 
